@@ -1,6 +1,6 @@
 from database.models import async_session
 from sqlalchemy import select, update
-from database.models import User, Post, Rule
+from database.models import User, Mailbox, Rule
 import datetime
 
 
