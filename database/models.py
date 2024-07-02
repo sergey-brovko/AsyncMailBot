@@ -34,7 +34,7 @@ class Rule(Base):
     __tablename__ = 'rules'
 
     rule_id: Mapped[int] = mapped_column(primary_key=True)
-    mailbox_id: Mapped[int] = mapped_column(ForeignKey(column='mailboxes.post_id', ondelete='CASCADE'))
+    mailbox_id: Mapped[int] = mapped_column(ForeignKey(column='mailboxes.mailbox_id', ondelete='CASCADE'))
     email = mapped_column(String(30))
     action = mapped_column(String(20))
 

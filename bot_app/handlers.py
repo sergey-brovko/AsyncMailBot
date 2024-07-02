@@ -17,8 +17,7 @@ class RegMailbox(StatesGroup):
 @router.message(Command("start"))
 async def cmd_start(message: Message):
     await rq.set_user(message.chat.id)
-    await message.answer(f"Приветствую, {message.from_user.first_name}, данный бот предназначен для "
-                         f"помощи в отслеживании важных писем вашей электронной почты. Выберите одно из "
+    await message.answer(f"Приветствую, {message.from_user.first_name}, выберите одно из "
                          f"доступных действий", reply_markup=kb.main)
 
 
@@ -55,3 +54,18 @@ async def registration(callback: CallbackQuery):
     await callback.answer('Список ваших почтовых ящиков')
     await callback.message.edit_text('Список ваших почтовых ящиков',
                                      reply_markup=await kb.inline_mailboxes(callback.message.chat.id))
+
+
+@router.callback_query(F.data == 'start')
+async def start(callback: CallbackQuery):
+    await callback.answer('Главное меню')
+    await callback.message.edit_text(f"Выберите одно из доступных действий",
+                                     reply_markup=kb.main)
+
+
+@router.callback_query(F.data == 'mailbox_')
+async def start(callback: CallbackQuery):
+
+    await callback.answer('Главное меню')
+    await callback.message.edit_text(f"Выберите одно из доступных действий",
+                                     reply_markup=kb.main)

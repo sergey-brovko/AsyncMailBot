@@ -23,5 +23,5 @@ async def set_mailbox(chat_id: int, email: str, password: str) -> None:
 
 async def get_mailboxes(chat_id: int) -> Mailbox:
     async with async_session() as session:
-        user = await session.scalar(select(User).where(User.chat_id == chat_id))
-        return await session.scalars(select(Mailbox).where(Mailbox.user_id == user.user_id).order_by(Mailbox.email))
+        return await session.scalars(select(Mailbox).join(User, User.user_id == Mailbox.user_id)
+                                     .where(User.chat_id == chat_id).order_by(Mailbox.email))
