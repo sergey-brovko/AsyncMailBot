@@ -19,7 +19,7 @@ class Mail(ServerName):
         self.email = email
         self.password = password
 
-    def is_connect(self):
+    async def is_connect(self):
         try:
             if MailBox(self.server).login(username=self.email, password=self.password):
                 return True

@@ -23,7 +23,14 @@ async def mailbox_menu(mailbox_id: int) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="📄 Список правил для почты", callback_data=f'rules_list_{mailbox_id}')],
         [InlineKeyboardButton(text="🌐 Проверить соединение с сервером",
                               callback_data=f'check_mailbox_{mailbox_id}')],
-        [InlineKeyboardButton(text="❌ Удалить почтовый ящик", callback_data=f'delete-mailbox_{mailbox_id}')],
+        [InlineKeyboardButton(text="❌ Удалить почтовый ящик", callback_data=f'delete_mailbox_{mailbox_id}')],
         [InlineKeyboardButton(text="🔙 Назад", callback_data='checking_mailboxes'),
+         InlineKeyboardButton(text="🔝 Начало", callback_data='start')]
+    ])
+
+
+async def mailbox_checking(mailbox_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔙 Назад", callback_data=f'mailbox_{mailbox_id}'),
          InlineKeyboardButton(text="🔝 Начало", callback_data='start')]
     ])
