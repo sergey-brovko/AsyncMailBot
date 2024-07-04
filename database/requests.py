@@ -21,7 +21,7 @@ async def set_mailbox(chat_id: int, email: str, password: str) -> None:
             await session.commit()
 
 
-async def get_mailboxes(chat_id: int) -> Mailbox:
+async def get_mailboxes(chat_id: int) -> list[Mailbox]:
     async with async_session() as session:
         return await session.scalars(select(Mailbox).join(User, User.user_id == Mailbox.user_id)
                                      .where(User.chat_id == chat_id).order_by(Mailbox.email))
@@ -38,3 +38,16 @@ async def delete_mailbox_by_id(mailbox_id: int) -> None:
     async with async_session() as session:
         await session.execute(delete(Mailbox).where(Mailbox.mailbox_id == mailbox_id))
         await session.commit()
+
+
+async def set_rule(mailbox_id: int, email: str, action: str) -> None:
+    async with async_session() as session:
+        mailbox = await session.scalar(select(Mailbox).where(Mailbox.mailbox_id == mailbox_id))
+        if mailbox:
+            session.add(Rule(mailbox_id=mailbox_id, email=email, action=action))
+            await session.commit()
+
+
+async def get_rules(mailbox_id: int) -> list[Rule]:
+    async with async_session() as session:
+        return await session.scalars(select(Rule).where(Rule.mailbox_id == mailbox_id).order_by(Rule.email))

@@ -15,6 +15,12 @@ class RegMailbox(StatesGroup):
     password = State()
 
 
+class RegRule(StatesGroup):
+    email = State()
+    action = State()
+    mailbox_id = State()
+
+
 @router.message(Command("start"))
 async def cmd_start(message: Message):
     await rq.set_user(message.chat.id)
@@ -65,10 +71,11 @@ async def start(callback: CallbackQuery):
 
 
 @router.callback_query(F.data.startswith('mailbox_'))
-async def mailbox_actions(callback: CallbackQuery):
+async def mailbox_actions(callback: CallbackQuery, mailbox_id=None):
     await callback.answer('Вы выбрали почтовый ящик')
+    mailbox_id = mailbox_id if mailbox_id else int(callback.data.split('_')[1])
     await callback.message.edit_text(f"Выберите действие",
-                                     reply_markup=await kb.mailbox_menu(int(callback.data.split('_')[1])))
+                                     reply_markup=await kb.mailbox_menu(mailbox_id))
 
 
 @router.callback_query(F.data.startswith('check_mailbox_'))
@@ -89,3 +96,36 @@ async def delete_mailbox(callback: CallbackQuery):
     await rq.delete_mailbox_by_id(mailbox_id)
     await callback.answer('Почтовый ящик удален')
     await start(callback)
+
+
+@router.callback_query(F.data.startswith('create_rule_'))
+async def create_rule(callback: CallbackQuery, state: FSMContext):
+    mailbox_id = int(callback.data.split('_')[2])
+    await state.update_data(mailbox_id=mailbox_id)
+    await callback.answer('Введите адрес электронной почты с которой необходимо отслеживать письма')
+    await state.set_state(RegRule.email)
+    await callback.message.edit_text('Введите адрес с которой необходимо отслеживать письма:')
+
+
+@router.message(RegRule.email)
+async def enter_email(message: Message, state: FSMContext):
+    await state.update_data(email=message.text)
+    await message.answer("Выберите действия с входящими сообщениями:", reply_markup=kb.action)
+
+
+@router.callback_query(F.data.startswith('track_'))
+async def get_action(callback: CallbackQuery, state: FSMContext):
+    action = callback.data.split('_')[1]
+    await callback.answer('Введите адрес электронной почты с которой необходимо отслеживать письма')
+    await state.update_data(action=action)
+    data = await state.get_data()
+    await rq.set_rule(mailbox_id=data['mailbox_id'], email=data['email'], action=data['action'])
+    await mailbox_actions(callback, int(data['mailbox_id']))
+    await state.clear()
+
+
+@router.callback_query(F.data.startswith('rules_list_'))
+async def show_rule(callback: CallbackQuery):
+    mailbox_id = int(callback.data.split('_')[2])
+    await callback.answer('Список правил для почтового ящика')
+    await callback.message.edit_text('Список правил для почтового ящика', reply_markup=await kb.inline_rules(mailbox_id))
