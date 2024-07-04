@@ -4,14 +4,17 @@ from bs4 import BeautifulSoup
 
 class ServerName:
     def __init__(self, email):
-        if email.split('@')[1] in ('mail.ru', 'internet.ru', 'list.ru', 'bk.ru', 'inbox.ru', 'mail.ua', 'xmail.ru'):
-            self.server = 'imap.mail.ru'
-        elif email.split('@')[1] in ('yandex.ru', 'yandex.ua', 'narod.ru', 'ya.ru', 'yandex.com'):
-            self.server = 'imap.yandex.ru'
+        if len(email.split('@')) > 1:
+            if email.split('@')[1] in ('mail.ru', 'internet.ru', 'list.ru', 'bk.ru', 'inbox.ru', 'mail.ua', 'xmail.ru'):
+                self.server = 'imap.mail.ru'
+            elif email.split('@')[1] in ('yandex.ru', 'yandex.ua', 'narod.ru', 'ya.ru', 'yandex.com'):
+                self.server = 'imap.yandex.ru'
+            else:
+                raise ValueError("В настоящее время доступно только использование почтовых серверов Mail и Yandex. Для "
+                                 "рассмотрения возможности использования вашего почтового сервера обратитесь к "
+                                 "администратору бота @true_kapitan")
         else:
-            raise ValueError("В настоящее время доступно только использование почтовых серверов Mail и Yandex. Для "
-                             "рассмотрения возможности использования вашего почтового сервера обратитесь к "
-                             "администратору бота ____")
+            raise ValueError("Неверный формат электронной почты. Подключение невозможно")
 
 
 class Mail(ServerName):

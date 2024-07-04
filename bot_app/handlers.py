@@ -88,14 +88,17 @@ async def mailbox_actions(callback: CallbackQuery, mailbox_id=None):
 
 @router.callback_query(F.data.startswith('check_mailbox_'))
 async def check_mailbox(callback: CallbackQuery):
+    await callback.answer('Проверка соединения с сервером')
     mailbox_id = int(callback.data.split('_')[2])
     mailbox = await rq.get_mailboxes_by_id(mailbox_id)
-    text = ("Подключено"
-            if await mb.Mail(email=mailbox.email, password=mailbox.password).is_connect()
-            else "Не удалось подключиться. проверьте настройки почтового ящика (правильный логин и пароль, разрешение "
-                 "в настройках почтового ящика для работы с IMAP)")
-    await callback.answer('Проверка соединения с сервером')
-    await callback.message.edit_text(text=text, reply_markup=await kb.mailbox_checking(mailbox_id))
+    try:
+        text = ("Подключено"
+                if await mb.Mail(email=mailbox.email, password=mailbox.password).is_connect()
+                else "Не удалось подключиться. проверьте настройки почтового ящика (правильный логин и пароль, "
+                     "разрешение в настройках почтового ящика для работы с IMAP)")
+        await callback.message.edit_text(text=text, reply_markup=await kb.mailbox_checking(mailbox_id))
+    except ValueError as e:
+        await callback.message.edit_text(text=str(e), reply_markup=await kb.mailbox_checking(mailbox_id))
 
 
 @router.callback_query(F.data.startswith('delete_mailbox_'))
