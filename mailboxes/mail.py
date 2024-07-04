@@ -9,8 +9,9 @@ class ServerName:
         elif email.split('@')[1] in ('yandex.ru', 'yandex.ua', 'narod.ru', 'ya.ru', 'yandex.com'):
             self.server = 'imap.yandex.ru'
         else:
-            raise ValueError("""В настоящее время доступно только использование почтовых серверов Mail и Yandex. 
-            Для рассмотрения возможности использования вашего почтового сервера обратитесь к администратору бота ____""")
+            raise ValueError("В настоящее время доступно только использование почтовых серверов Mail и Yandex. Для "
+                             "рассмотрения возможности использования вашего почтового сервера обратитесь к "
+                             "администратору бота ____")
 
 
 class Mail(ServerName):
@@ -47,4 +48,4 @@ class MailText(MailFilter):
             for msg in mailbox.fetch(criteria=A('NEW', f'FROM "{self.from_email}"'), reverse=True):
                 if msg:
                     soup = BeautifulSoup(msg.html, 'html.parser')
-                    return soup.get_text(separator='\n')+self.from_email
+                    return soup.get_text(separator='\n') + self.from_email

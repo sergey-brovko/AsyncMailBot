@@ -28,6 +28,12 @@ async def cmd_start(message: Message):
                          f"доступных действий", reply_markup=kb.main)
 
 
+@router.message(Command("info"))
+async def cmd_info(message: Message):
+    await rq.set_user(message.chat.id)
+    await message.answer(f"Тут будет красивое описание работы бота", reply_markup=kb.main_menu)
+
+
 @router.callback_query(F.data == 'registration')
 async def registration(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Введите данные для регистрации почтового ящика')
@@ -39,6 +45,7 @@ async def registration(callback: CallbackQuery, state: FSMContext):
 async def enter_password(message: Message, state: FSMContext):
     await state.update_data(email=message.text)
     await state.set_state(RegMailbox.password)
+    await message.delete()
     await message.answer("Введите пароль от почтового ящика:")
 
 
@@ -46,6 +53,7 @@ async def enter_password(message: Message, state: FSMContext):
 async def finish_registration(message: Message, state: FSMContext):
     await state.update_data(password=message.text)
     data = await state.get_data()
+    await message.delete()
     try:
         await rq.set_mailbox(chat_id=message.chat.id, email=data['email'], password=data['password'])
         await message.answer("Почтовый ящик зарегистрирован")
@@ -53,11 +61,11 @@ async def finish_registration(message: Message, state: FSMContext):
         await message.answer(f"Ошибка при регистрации:\n{e}")
     finally:
         await state.clear()
-        await cmd_start(message)
+        await message.answer(f"Выберите одно из доступных действий", reply_markup=kb.main)
 
 
 @router.callback_query(F.data == 'checking_mailboxes')
-async def registration(callback: CallbackQuery):
+async def checking_mailboxes(callback: CallbackQuery):
     await callback.answer('Список ваших почтовых ящиков')
     await callback.message.edit_text('Список ваших почтовых ящиков',
                                      reply_markup=await kb.inline_mailboxes(callback.message.chat.id))
@@ -95,7 +103,7 @@ async def delete_mailbox(callback: CallbackQuery):
     mailbox_id = int(callback.data.split('_')[2])
     await rq.delete_mailbox_by_id(mailbox_id)
     await callback.answer('Почтовый ящик удален')
-    await start(callback)
+    await checking_mailboxes(callback)
 
 
 @router.callback_query(F.data.startswith('create_rule_'))
@@ -125,7 +133,25 @@ async def get_action(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith('rules_list_'))
-async def show_rule(callback: CallbackQuery):
-    mailbox_id = int(callback.data.split('_')[2])
+async def show_rules(callback: CallbackQuery, mailbox_id=None):
+    mailbox_id = mailbox_id if mailbox_id else int(callback.data.split('_')[2])
     await callback.answer('Список правил для почтового ящика')
-    await callback.message.edit_text('Список правил для почтового ящика', reply_markup=await kb.inline_rules(mailbox_id))
+    await callback.message.edit_text('Список правил для почтового ящика',
+                                     reply_markup=await kb.inline_rules(mailbox_id))
+
+
+@router.callback_query(F.data.startswith('rule_'))
+async def rule(callback: CallbackQuery):
+    rule_id = int(callback.data.split('_')[1])
+    await callback.answer('Выберите действие для правила')
+    await callback.message.edit_text('Выберите действие',
+                                     reply_markup=await kb.rule_menu(rule_id=rule_id))
+
+
+@router.callback_query(F.data.startswith('delete_rule_'))
+async def delete_rule(callback: CallbackQuery):
+    rule_id = int(callback.data.split('_')[2])
+    await rq.delete_rule_by_id(rule_id=rule_id)
+    mailbox_id = int(callback.data.split('_')[3])
+    await callback.answer('Правило удалено')
+    await show_rules(callback, mailbox_id)

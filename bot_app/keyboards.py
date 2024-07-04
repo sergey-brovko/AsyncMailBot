@@ -52,3 +52,16 @@ async def inline_rules(mailbox_id: int) -> InlineKeyboardMarkup:
                                           callback_data=f'rule_{rule.rule_id}'))
     keyboard.add(InlineKeyboardButton(text='⬅️ Назад', callback_data=f'mailbox_{mailbox_id}'))
     return keyboard.adjust(1).as_markup()
+
+
+async def rule_menu(rule_id: int) -> InlineKeyboardMarkup:
+    mailbox_id = await rq.get_mailbox_id_by_rule(rule_id=rule_id)
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="❌ Удалить правило", callback_data=f'delete_rule_{rule_id}_{mailbox_id}')],
+        [InlineKeyboardButton(text="🔙 Назад", callback_data=f'rules_list_{mailbox_id}'),
+         InlineKeyboardButton(text="🔝 Начало", callback_data='start')]
+    ])
+
+main_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="🔝 Начало", callback_data='start')]
+])
