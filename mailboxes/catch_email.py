@@ -1,4 +1,5 @@
-from aiogram import Bot, Dispatcher
+from aiogram import Bot
+from aiogram.types import BufferedInputFile
 from database import requests as rq
 from mailboxes.mail import MailFile, MailText
 import asyncio
@@ -21,7 +22,8 @@ async def send_emails() -> None:
                     files = mail.get_response()
                     if files:
                         for name, file in files:
-                            await bot.send_document(chat_id=rule[4], document=file, caption=name)
+                            await bot.send_document(chat_id=rule[4],
+                                                    document=BufferedInputFile(file=file, filename=name), caption=name)
                 elif rule[1] == 'text':
                     mail = MailText(email=rule[2], password=rule[3], from_email=rule[0])
                     text = mail.get_response()
