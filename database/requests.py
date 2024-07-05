@@ -1,5 +1,5 @@
 from database.models import async_session
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 from database.models import User, Mailbox, Rule
 from encryption.crypt import encrypt, decrypt
 
@@ -11,6 +11,12 @@ async def set_user(chat_id: int) -> None:
         if not user:
             session.add(User(chat_id=chat_id))
             await session.commit()
+
+
+async def update_user_status(chat_id: int, status: bool) -> None:
+    async with async_session() as session:
+        await session.execute(update(User).where(User.chat_id == chat_id).values(receive_letters=status))
+        await session.commit()
 
 
 async def set_mailbox(chat_id: int, email: str, password: str) -> None:
@@ -62,3 +68,13 @@ async def delete_rule_by_id(rule_id: int) -> None:
 async def get_mailbox_id_by_rule(rule_id: int) -> int:
     async with async_session() as session:
         return await session.scalar(select(Rule.mailbox_id).where(Rule.rule_id == rule_id))
+
+
+async def get_all_rules() -> list[tuple] | None:
+    async with async_session() as session:
+        rules = await session.execute(select(Rule.email, Rule.action, Mailbox.email, Mailbox.password, User.chat_id)
+                                      .join(Mailbox, Rule.mailbox_id == Mailbox.mailbox_id).
+                                      join(User, Mailbox.user_id == User.user_id)
+                                      .where(User.receive_letters == True).order_by(Rule.email))
+
+        return [(rule[0], rule[1], rule[2], decrypt(rule[3]), rule[4]) for rule in rules]

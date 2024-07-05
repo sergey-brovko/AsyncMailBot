@@ -28,9 +28,20 @@ async def cmd_start(message: Message):
                          f"доступных действий", reply_markup=kb.main)
 
 
+@router.message(Command("start_bot"))
+async def cmd_start_bot(message: Message):
+    await rq.update_user_status(message.chat.id, True)
+    await message.answer("Бот включен на отслеживание почты")
+
+
+@router.message(Command("stop_bot"))
+async def cmd_stop_bot(message: Message):
+    await rq.update_user_status(message.chat.id, False)
+    await message.answer("Отслеживание почты ботом отключено")
+
+
 @router.message(Command("info"))
 async def cmd_info(message: Message):
-    await rq.set_user(message.chat.id)
     await message.answer(f"Тут будет красивое описание работы бота", reply_markup=kb.main_menu)
 
 

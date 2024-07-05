@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, String, ForeignKey
+from sqlalchemy import BigInteger, String, ForeignKey, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from dotenv import load_dotenv
@@ -19,6 +19,7 @@ class User(Base):
 
     user_id: Mapped[int] = mapped_column(primary_key=True)
     chat_id = mapped_column(BigInteger)
+    receive_letters = mapped_column(Boolean, default=False)
 
 
 class Mailbox(Base):
