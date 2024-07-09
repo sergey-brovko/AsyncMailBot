@@ -20,23 +20,21 @@ def detect_file_type(filename: str) -> str:
         return 'Document'
     if filename.split('.')[1] in ('jpg', 'jpeg', 'png', 'gif', 'raw', 'svg', 'bmp', 'ico', 'tiff', 'webp'):
         return 'Photo'
-    if filename.split('.',)[1] in ('3g2','3gp','3gp2','3gpp','3gpp2','asf','asx','avi','bin','dat','drv',
-                                  'f4v','flv','gtp','h264','m4v','mkv','mod','moov','mov','mp4','mpeg','mpg',
-                                  'mts','rm','rmvb','spl','srt','stl','swf','ts','vcd','vid','vid','vid',
-                                  'vob','webm','wm','wmv','yuv'):
+    if filename.split('.', )[1] in ('3g2', '3gp', '3gp2', '3gpp', '3gpp2', 'asf', 'asx', 'avi', 'bin', 'dat', 'drv',
+                                    'f4v', 'flv', 'gtp', 'h264', 'm4v', 'mkv', 'mod', 'moov', 'mov', 'mp4', 'mpeg',
+                                    'mpg', 'mts', 'rm', 'rmvb', 'spl', 'srt', 'stl', 'swf', 'ts', 'vcd', 'vid', 'vid',
+                                    'vid', 'vob', 'webm', 'wm', 'wmv', 'yuv'):
         return 'Video'
 
 
-def files_to_media(files: list[tuple[str, bytes]]) -> list[InputMediaAudio | InputMediaDocument | InputMediaPhoto |
-                                                           InputMediaVideo]:
-    media = []
-    for name, file in files:
-        if detect_file_type(name) == 'Document':
-            media.append(InputMediaDocument(media=BufferedInputFile(file=file, filename=name)))
-        elif detect_file_type(name) == 'Audio':
-            media.append(InputMediaAudio(media=BufferedInputFile(file=file, filename=name)))
-        elif detect_file_type(name) == 'Photo':
-            media.append(InputMediaPhoto(media=BufferedInputFile(file=file, filename=name)))
-        elif detect_file_type(name) == 'Video':
-            media.append(InputMediaVideo(media=BufferedInputFile(file=file, filename=name)))
-    return media
+def files_to_media(file_tuple: tuple[str, bytes]) -> (InputMediaAudio | InputMediaDocument |
+                                                      InputMediaPhoto | InputMediaVideo):
+    name, file = file_tuple
+    if detect_file_type(name) == 'Document':
+        return InputMediaDocument(media=BufferedInputFile(file=file, filename=name))
+    if detect_file_type(name) == 'Audio':
+        return InputMediaAudio(media=BufferedInputFile(file=file, filename=name))
+    if detect_file_type(name) == 'Photo':
+        return InputMediaPhoto(media=BufferedInputFile(file=file, filename=name))
+    if detect_file_type(name) == 'Video':
+        return InputMediaVideo(media=BufferedInputFile(file=file, filename=name))

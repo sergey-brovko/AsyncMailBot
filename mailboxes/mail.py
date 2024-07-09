@@ -25,7 +25,7 @@ class Mail(ServerName):
 
     async def is_connect(self):
         try:
-            if MailBox(self.server).login(username=self.email, password=self.password):
+            with MailBox(self.server).login(username=self.email, password=self.password):
                 return True
         except:
             return False
@@ -38,7 +38,7 @@ class MailFilter(Mail):
 
 
 class MailFile(MailFilter):
-    def get_response(self):
+    async def get_response(self):
         with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
             for msg in mailbox.fetch(criteria=A('NEW', f'FROM "{self.from_email}"'), reverse=True):
                 if msg:
@@ -46,7 +46,7 @@ class MailFile(MailFilter):
 
 
 class MailText(MailFilter):
-    def get_response(self):
+    async def get_response(self):
         with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
             for msg in mailbox.fetch(criteria=A('NEW', f'FROM "{self.from_email}"'), reverse=True):
                 if msg:
