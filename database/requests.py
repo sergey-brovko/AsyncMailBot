@@ -1,6 +1,6 @@
 from database.models import async_session
 from sqlalchemy import select, delete, update
-from database.models import User, Mailbox, Rule
+from database.models import User, Mailbox, Rule, HTML
 from encryption.crypt import encrypt, decrypt
 
 
@@ -78,3 +78,12 @@ async def get_all_rules() -> list[tuple] | None:
                                       .where(User.receive_letters == True).order_by(Rule.email))
 
         return [(rule[0], rule[1], rule[2], decrypt(rule[3]), rule[4]) for rule in rules]
+
+
+async def set_html(html: str) -> int:
+    async with async_session() as session:
+        mail = await session.scalar(select(HTML).where(HTML.html == html))
+        if not mail:
+            session.add(HTML(html=html))
+            await session.commit()
+        return await session.scalar(select(HTML.id).where(HTML.html == html))

@@ -52,3 +52,11 @@ class MailText(MailFilter):
                 if msg:
                     soup = BeautifulSoup(msg.html, 'html.parser')
                     return soup.get_text(separator='\n') + self.from_email
+
+
+class MailHtml(MailFilter):
+    async def get_response(self):
+        with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
+            for msg in mailbox.fetch(criteria=A('NEW', f'FROM "{self.from_email}"'), reverse=True):
+                if msg:
+                    return msg.html

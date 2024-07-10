@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from database import requests as rq
 
@@ -6,6 +6,12 @@ main = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Зарегистрировать почтовый ящик", callback_data='registration')],
     [InlineKeyboardButton(text="Список почтовых ящиков", callback_data='checking_mailboxes')]
 ])
+
+
+async def web_app_kb(html_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Открыть письмо", web_app=WebAppInfo(url=f'https://127.0.0.1:5000/{html_id}'))]
+        ])
 
 
 action = InlineKeyboardMarkup(inline_keyboard=[

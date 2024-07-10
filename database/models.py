@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, String, ForeignKey, Boolean
+from sqlalchemy import BigInteger, String, ForeignKey, Boolean, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from dotenv import load_dotenv
@@ -38,6 +38,13 @@ class Rule(Base):
     mailbox_id: Mapped[int] = mapped_column(ForeignKey(column='mailboxes.mailbox_id', ondelete='CASCADE'))
     email = mapped_column(String(30))
     action = mapped_column(String(20))
+
+
+class HTML(Base):
+    __tablename__ = 'mail_html'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    html = mapped_column(Text, unique=True)
 
 
 async def async_main():
