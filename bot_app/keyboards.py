@@ -8,9 +8,10 @@ main = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 
-async def web_app_kb(html_id: int) -> InlineKeyboardMarkup:
+async def web_app_kb(html_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Открыть письмо", web_app=WebAppInfo(url=f'https://127.0.0.1:5000/{html_id}'))]
+        [InlineKeyboardButton(text="Открыть письмо",
+                              web_app=WebAppInfo(url=f'https://flask-brovko-sergey.amvera.io/{html_id}'))]
         ])
 
 
@@ -69,5 +70,5 @@ async def rule_menu(rule_id: int) -> InlineKeyboardMarkup:
     ])
 
 main_menu = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="🔝 Начало", callback_data='start')]
+    [InlineKeyboardButton(text="🔝 Главное меню", callback_data='start')]
 ])

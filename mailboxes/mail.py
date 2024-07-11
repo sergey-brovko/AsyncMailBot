@@ -9,10 +9,13 @@ class ServerName:
                 self.server = 'imap.mail.ru'
             elif email.split('@')[1] in ('yandex.ru', 'yandex.ua', 'narod.ru', 'ya.ru', 'yandex.com'):
                 self.server = 'imap.yandex.ru'
+            elif email.split('@')[1] in ('outlook.com', '1cbit.ru'):
+                self.server = 'outlook.office365.com'
             else:
-                raise ValueError("В настоящее время доступно только использование почтовых серверов Mail и Yandex. Для "
-                                 "рассмотрения возможности использования вашего почтового сервера обратитесь к "
-                                 "администратору бота @true_kapitan")
+                raise ValueError("В настоящее время доступно только использование почтовых серверов Mail, Yandex "
+                                 "и Outlook. Почтовый сервер Gmail не поддерживает IMAP, его использование"
+                                 "невозможно. Для рассмотрения возможности использования вашего почтового "
+                                 "сервера обратитесь к администратору бота @true_kapitan")
         else:
             raise ValueError("Неверный формат электронной почты. Подключение невозможно")
 
@@ -59,4 +62,4 @@ class MailHtml(MailFilter):
         with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
             for msg in mailbox.fetch(criteria=A('NEW', f'FROM "{self.from_email}"'), reverse=True):
                 if msg:
-                    return msg.html
+                    return {'html': msg.html, 'mail_id': msg.uid}

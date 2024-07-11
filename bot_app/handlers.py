@@ -42,7 +42,10 @@ async def cmd_stop_bot(message: Message):
 
 @router.message(Command("info"))
 async def cmd_info(message: Message):
-    await message.answer(f"Тут будет красивое описание работы бота", reply_markup=kb.main_menu)
+    await message.answer(f"Бот предназначен для отслеживания важной для вас информации из вашей электронной почты. "
+                         f"Пароли ваших электронных ящиков, хранятся в шифрованном виде и недоступны, как для "
+                         f"администратора бота, так и для третьих лиц. Вопросы, относительно работы бота можно задать "
+                         f"@true_kapitan", reply_markup=kb.main_menu)
 
 
 @router.callback_query(F.data == 'registration')
@@ -105,9 +108,12 @@ async def check_mailbox(callback: CallbackQuery):
     try:
         text = ("Подключено"
                 if await mb.Mail(email=mailbox.email, password=mailbox.password).is_connect()
-                else "Не удалось подключиться. проверьте настройки почтового ящика (правильный логин и пароль, "
-                     "разрешение в настройках почтового ящика для работы с IMAP)")
-        await callback.message.edit_text(text=text, reply_markup=await kb.mailbox_checking(mailbox_id))
+                else "Не удалось подключиться. Проверьте настройки почтового ящика (правильный логин и пароль, "
+                     "разрешение в настройках почтового ящика для работы с IMAP).\n"
+                     "Настройки почты Yandex - https://yandex.ru/support/mail/mail-clients/others.html\n"
+                     "Настройки почты Mail - https://help.mail.ru/mail/mailer/popsmtp")
+        await callback.message.edit_text(text=text, reply_markup=await kb.mailbox_checking(mailbox_id),
+                                         disable_web_page_preview=True)
     except ValueError as e:
         await callback.message.edit_text(text=str(e), reply_markup=await kb.mailbox_checking(mailbox_id))
 

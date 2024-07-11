@@ -40,13 +40,6 @@ class Rule(Base):
     action = mapped_column(String(20))
 
 
-class HTML(Base):
-    __tablename__ = 'mail_html'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    html = mapped_column(Text, unique=True)
-
-
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
