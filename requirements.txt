@@ -1,0 +1,6 @@
+aiogram==3.8.0
+python-dotenv==1.0.1
+SQLAlchemy==2.0.31
+motor==3.5.1
+beautifulsoup4==4.12.3
+cryptography==42.0.8
