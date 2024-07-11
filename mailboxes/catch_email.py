@@ -1,12 +1,14 @@
 from aiogram import Bot
 from aiogram.types import BufferedInputFile, InputMediaDocument
 from database import requests as rq
+from database.mongodb import collection
 from mailboxes.media import files_to_media
 from mailboxes.mail import MailFile, MailText, MailHtml
 from bot_app.keyboards import web_app_kb
 import asyncio
 from dotenv import load_dotenv
 import os
+
 
 load_dotenv()
 
@@ -20,10 +22,10 @@ async def send_emails() -> None:
                     mail = MailHtml(email=rule[2], password=rule[3], from_email=rule[0])
                     html = await mail.get_response()
                     if html:
-                        html_id = await rq.set_html(html)
-                        await bot.send_message(chat_id=rule[4], text=f"Запись добавлена в базу данных"
-                                                                     f" под номером: {html_id}",
-                                               reply_markup=await web_app_kb(html_id))
+                        await collection.insert_one({'id': 3, 'html': html})
+                        # await bot.send_message(chat_id=rule[4], text=f"Запись добавлена в базу данных"
+                        #                                              f" под номером: {html_id}",
+                        #                        reply_markup=await web_app_kb(html_id))
                 elif rule[1] == 'file':
                     mail = MailFile(email=rule[2], password=rule[3], from_email=rule[0])
                     files = await mail.get_response()
