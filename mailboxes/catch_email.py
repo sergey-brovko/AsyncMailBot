@@ -23,7 +23,7 @@ async def send_emails() -> None:
                     if html:
                         html_id = f'{rule[4]}-{html['mail_id']}'
                         await write_html(html_id, html['html'])
-                        await bot.send_message(chat_id=rule[4], text=f"Входящее письмо от {rule[0]}",
+                        await bot.send_message(chat_id=rule[4], text=f'Входящее письмо от "{rule[0]}" для "{rule[2]}"',
                                                reply_markup=await web_app_kb(html_id))
                 elif rule[1] == 'file':
                     mail = MailFile(email=rule[2], password=rule[3], from_email=rule[0])
@@ -31,12 +31,14 @@ async def send_emails() -> None:
                     if files:
                         for file in files:
                             await bot.send_media_group(chat_id=rule[4], media=[files_to_media(file)])
-                        await bot.send_message(chat_id=rule[4], text=f"Получено {len(files)} файл-а(-ов) от {rule[2]}")
+                        await bot.send_message(chat_id=rule[4], text=f'Получено {len(files)} файл-а(-ов) от "{rule[0]}"'
+                                                                     f' для "{rule[0]}"')
                 elif rule[1] == 'text':
                     mail = MailText(email=rule[2], password=rule[3], from_email=rule[0])
                     text = await mail.get_response()
                     if text:
-                        await bot.send_message(chat_id=rule[4], text=text)
+                        await bot.send_message(chat_id=rule[4], text=f'Входящее письмо от "{rule[0]}" для "{rule[2]}"\n'
+                                                                     f'{text}')
         await asyncio.sleep(5)
 
 
