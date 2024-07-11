@@ -54,7 +54,9 @@ class MailText(MailFilter):
             for msg in mailbox.fetch(criteria=A('NEW', f'FROM "{self.from_email}"'), reverse=True):
                 if msg:
                     soup = BeautifulSoup(msg.html, 'html.parser')
-                    return soup.get_text(separator='\n') + self.from_email
+                    text = list(soup.get_text(separator='\n') + self.from_email)
+                    text = [ch for i, ch in enumerate(text) if (ch != '\n') or (text[i-1] != '\n')]
+                    return ''.join(text)
 
 
 class MailHtml(MailFilter):

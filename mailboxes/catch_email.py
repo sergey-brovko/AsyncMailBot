@@ -32,7 +32,7 @@ async def send_emails() -> None:
                         for file in files:
                             await bot.send_media_group(chat_id=rule[4], media=[files_to_media(file)])
                         await bot.send_message(chat_id=rule[4], text=f'Получено {len(files)} файл-а(-ов) от "{rule[0]}"'
-                                                                     f' для "{rule[0]}"')
+                                                                     f' для "{rule[2]}"')
                 elif rule[1] == 'text':
                     mail = MailText(email=rule[2], password=rule[3], from_email=rule[0])
                     text = await mail.get_response()
