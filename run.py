@@ -1,27 +1,12 @@
-import asyncio
-from aiogram import Bot, Dispatcher
-from dotenv import load_dotenv
-import os
-from database.models import async_main
-from bot_app.handlers import router
 from multiprocessing import Process
-from mailboxes.catch_email import worker
-load_dotenv()
-
-
-async def main():
-    bot = Bot(token=os.getenv('TOKEN'))
-    await async_main()
-    process = Process(target=worker)
-    process.start()
-    dp = Dispatcher()
-    dp.include_router(router)
-    await dp.start_polling(bot)
-    process.join()
-
+from mailboxes.catch_email import mail_worker
+from bot_app.app import bot_run
 
 if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print('Бот выключен')
+    process_bot = Process(target=bot_run)
+    process_mail = Process(target=mail_worker)
+    process_bot.start()
+    process_mail.start()
+    process_mail.join()
+    process_bot.join()
+

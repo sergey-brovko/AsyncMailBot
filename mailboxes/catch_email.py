@@ -21,7 +21,7 @@ async def send_emails() -> None:
                     mail = MailHtml(email=rule[2], password=rule[3], from_email=rule[0])
                     html = await mail.get_response()
                     if html:
-                        html_id = f'{rule[4]}-{html['mail_id']}'
+                        html_id = f"{rule[4]}-{html.get('mail_id')}"
                         await write_html(html_id, html['html'])
                         await bot.send_message(chat_id=rule[4], text=f'Входящее письмо от "{rule[0]}" для "{rule[2]}"',
                                                reply_markup=await web_app_kb(html_id))
@@ -42,9 +42,9 @@ async def send_emails() -> None:
         await asyncio.sleep(5)
 
 
-def worker():
+def mail_worker():
     try:
-        asyncio.run((send_emails()))
+        asyncio.run(send_emails())
     except KeyboardInterrupt:
         print('Отслеживание входящей почты остановлено')
 
