@@ -43,16 +43,22 @@ class MailFilter(Mail):
 class MailFile(MailFilter):
     async def get_response(self):
         with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
-            for msg in mailbox.fetch(criteria=A('NEW', f'FROM "{self.from_email}"'), reverse=True):
-                if msg:
+            print(f"Open IMAP connection for File {self.email}, {self.from_email}")
+            messages = mailbox.fetch(A(new=True))
+            for msg in messages:
+                if msg.from_ == self.from_email:
+                    print("Send File")
                     return [(att.filename, att.payload) for att in msg.attachments]
 
 
 class MailText(MailFilter):
     async def get_response(self):
         with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
-            for msg in mailbox.fetch(criteria=A('NEW', f'FROM "{self.from_email}"'), reverse=True):
-                if msg:
+            print(f"Open IMAP connection for Text {self.email}, {self.from_email}")
+            messages = mailbox.fetch(A(new=True))
+            for msg in messages:
+                if msg.from_ == self.from_email:
+                    print("Send Text")
                     soup = BeautifulSoup(msg.html, 'html.parser')
                     text = list(soup.get_text(separator='\n') + self.from_email)
                     text = [ch for i, ch in enumerate(text) if (ch != '\n') or (text[i-1] != '\n')]
@@ -62,6 +68,9 @@ class MailText(MailFilter):
 class MailHtml(MailFilter):
     async def get_response(self):
         with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
-            for msg in mailbox.fetch(criteria=A('NEW', f'FROM "{self.from_email}"'), reverse=True):
-                if msg:
-                    return {'html': msg.html, 'mail_id': msg.uid}
+            print(f"Open IMAP connection for HTML {self.email}, {self.from_email}")
+            messages = mailbox.fetch(A(new=True))
+            for msg in messages:
+                if msg.from_ == self.from_email:
+                    print("Send HTML")
+                    return {'html': msg.html, 'mail_id': msg.date_str}

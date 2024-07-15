@@ -7,14 +7,23 @@ from bot_app.keyboards import web_app_kb
 import asyncio
 from dotenv import load_dotenv
 import os
+import logging
 
+
+logging.basicConfig(level=logging.DEBUG, filename="send_emails.log", filemode="w",
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.debug("A DEBUG Message")
+logging.info("An INFO")
+logging.warning("A WARNING")
+logging.error("An ERROR")
+logging.critical("A message of CRITICAL severity")
 
 load_dotenv()
 
 
 async def send_emails() -> None:
-    while True:
-        async with Bot(token=os.getenv('TOKEN')) as bot:
+    async with Bot(token=os.getenv('TOKEN')) as bot:
+        while True:
             rules = await rq.get_all_rules()
             for rule in rules:
                 if rule[1] == 'all':
@@ -39,7 +48,7 @@ async def send_emails() -> None:
                     if text:
                         await bot.send_message(chat_id=rule[4], text=f'Входящее письмо от "{rule[0]}" для "{rule[2]}"\n'
                                                                      f'{text}')
-        await asyncio.sleep(5)
+            await asyncio.sleep(5)
 
 
 def mail_worker():
