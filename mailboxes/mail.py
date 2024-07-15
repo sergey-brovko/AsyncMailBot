@@ -1,5 +1,14 @@
 from imap_tools import MailBox, A
 from bs4 import BeautifulSoup
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(f"{__name__}.log", mode='w')
+formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.info(f"Testing the custom logger for module {__name__}...")
 
 
 class ServerName:
@@ -12,11 +21,13 @@ class ServerName:
             elif email.split('@')[1] in ('outlook.com', '1cbit.ru'):
                 self.server = 'outlook.office365.com'
             else:
+                logger.exception("Домен не из списка")
                 raise ValueError("В настоящее время доступно только использование почтовых серверов Mail, Yandex "
                                  "и Outlook. Почтовый сервер Gmail не поддерживает IMAP, его использование"
                                  "невозможно. Для рассмотрения возможности использования вашего почтового "
                                  "сервера обратитесь к администратору бота @true_kapitan")
         else:
+            logger.exception("Неверный формат электронной почты.")
             raise ValueError("Неверный формат электронной почты. Подключение невозможно")
 
 
@@ -43,34 +54,44 @@ class MailFilter(Mail):
 class MailFile(MailFilter):
     async def get_response(self):
         with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
-            print(f"Open IMAP connection for File {self.email}, {self.from_email}")
-            messages = mailbox.fetch(A(new=True))
-            for msg in messages:
-                if msg.from_ == self.from_email:
-                    print("Send File")
-                    return [(att.filename, att.payload) for att in msg.attachments]
+            try:
+                logger.info(f"Open IMAP connection for File {self.email}, {self.from_email}")
+                messages = mailbox.fetch(A(new=True))
+                for msg in messages:
+                    if msg.from_ == self.from_email:
+                        logger.info("Send File")
+                        return [(att.filename, att.payload) for att in msg.attachments]
+            except Exception as e:
+                logger.exception("Неверный формат электронной почты.", exc_info=e)
 
 
 class MailText(MailFilter):
     async def get_response(self):
         with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
-            print(f"Open IMAP connection for Text {self.email}, {self.from_email}")
-            messages = mailbox.fetch(A(new=True))
-            for msg in messages:
-                if msg.from_ == self.from_email:
-                    print("Send Text")
-                    soup = BeautifulSoup(msg.html, 'html.parser')
-                    text = list(soup.get_text(separator='\n') + self.from_email)
-                    text = [ch for i, ch in enumerate(text) if (ch != '\n') or (text[i-1] != '\n')]
-                    return ''.join(text)
+            try:
+                logger.info(f"Open IMAP connection for Text {self.email}, {self.from_email}")
+                messages = mailbox.fetch(A(new=True))
+                for msg in messages:
+                    if msg.from_ == self.from_email:
+                        logger.info("Send Text")
+                        soup = BeautifulSoup(msg.html, 'html.parser')
+                        text = list(soup.get_text(separator='\n') + self.from_email)
+                        text = [ch for i, ch in enumerate(text) if (ch != '\n') or (text[i-1] != '\n')]
+                        text = [ch for i, ch in enumerate(text) if (ch != ' ') or (text[i - 1] != ' ')]
+                        return ''.join(text)
+            except Exception as e:
+                logger.exception("Неверный формат электронной почты.", exc_info=e)
 
 
 class MailHtml(MailFilter):
     async def get_response(self):
         with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
-            print(f"Open IMAP connection for HTML {self.email}, {self.from_email}")
-            messages = mailbox.fetch(A(new=True))
-            for msg in messages:
-                if msg.from_ == self.from_email:
-                    print("Send HTML")
-                    return {'html': msg.html, 'mail_id': msg.date_str}
+            try:
+                logger.info(f"Open IMAP connection for HTML {self.email}, {self.from_email}")
+                messages = mailbox.fetch(A(new=True))
+                for msg in messages:
+                    if msg.from_ == self.from_email:
+                        logger.info("Send HTML")
+                        return {'html': msg.html, 'mail_id': msg.date_str}
+            except Exception as e:
+                logger.exception("Неверный формат электронной почты.", exc_info=e)

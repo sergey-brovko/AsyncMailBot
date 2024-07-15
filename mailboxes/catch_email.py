@@ -9,14 +9,13 @@ from dotenv import load_dotenv
 import os
 import logging
 
-
-logging.basicConfig(level=logging.DEBUG, filename="send_emails.log", filemode="w",
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-logging.debug("A DEBUG Message")
-logging.info("An INFO")
-logging.warning("A WARNING")
-logging.error("An ERROR")
-logging.critical("A message of CRITICAL severity")
+logger2 = logging.getLogger(__name__)
+logger2.setLevel(logging.INFO)
+handler2 = logging.FileHandler(f"{__name__}.log", mode='w')
+formatter2 = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
+handler2.setFormatter(formatter2)
+logger2.addHandler(handler2)
+logger2.info(f"Testing the custom logger for module {__name__}...")
 
 load_dotenv()
 
@@ -54,6 +53,7 @@ async def send_emails() -> None:
 def mail_worker():
     try:
         asyncio.run(send_emails())
+        logger2.info('Включено отслеживание входящей почты остановлено')
     except KeyboardInterrupt:
-        print('Отслеживание входящей почты остановлено')
+        logger2.exception('Отслеживание входящей почты остановлено')
 
