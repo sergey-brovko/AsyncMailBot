@@ -4,11 +4,11 @@ from bot_app.app import bot_run
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler2 = logging.FileHandler(f"{__name__}.log", mode='w')
-formatter2 = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
-handler2.setFormatter(formatter2)
-logger.addHandler(handler2)
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(f"{__name__}.log", mode='w')
+formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 logger.info(f"Testing the custom logger for module {__name__}...")
 
 

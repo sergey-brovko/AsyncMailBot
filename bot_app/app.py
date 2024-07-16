@@ -6,13 +6,13 @@ import asyncio
 from aiogram import Bot, Dispatcher
 import logging
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.FileHandler(f"{__name__}.log", mode='w')
-formatter = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.info(f"Testing the custom logger for module {__name__}...")
+logger1 = logging.getLogger(__name__)
+logger1.setLevel(logging.DEBUG)
+handler1 = logging.FileHandler(f"{__name__}.log", mode='w')
+formatter1 = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
+handler1.setFormatter(formatter1)
+logger1.addHandler(handler1)
+logger1.info(f"Testing the custom logger for module {__name__}...")
 
 load_dotenv()
 
@@ -28,6 +28,6 @@ async def main():
 def bot_run():
     try:
         asyncio.run(main())
-        logger.info('Бот включен')
+        logger1.info('Бот включен')
     except KeyboardInterrupt:
-        logger.exception('Бот выключен')
+        logger1.exception('Бот выключен')

@@ -10,7 +10,7 @@ import os
 import logging
 
 logger2 = logging.getLogger(__name__)
-logger2.setLevel(logging.INFO)
+logger2.setLevel(logging.DEBUG)
 handler2 = logging.FileHandler(f"{__name__}.log", mode='w')
 formatter2 = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
 handler2.setFormatter(formatter2)
