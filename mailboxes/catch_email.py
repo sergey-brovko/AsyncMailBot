@@ -23,31 +23,36 @@ load_dotenv()
 async def send_emails() -> None:
     async with Bot(token=os.getenv('TOKEN')) as bot:
         while True:
-            rules = await rq.get_all_rules()
-            for rule in rules:
-                if rule[1] == 'all':
-                    mail = MailHtml(email=rule[2], password=rule[3], from_email=rule[0])
-                    html = await mail.get_response()
-                    if html:
-                        html_id = f"{rule[4]}-{html.get('mail_id')}"
-                        await write_html(html_id, html['html'])
-                        await bot.send_message(chat_id=rule[4], text=f'Входящее письмо от "{rule[0]}" для "{rule[2]}"',
-                                               reply_markup=await web_app_kb(html_id))
-                elif rule[1] == 'file':
-                    mail = MailFile(email=rule[2], password=rule[3], from_email=rule[0])
-                    files = await mail.get_response()
-                    if files:
-                        for file in files:
-                            await bot.send_media_group(chat_id=rule[4], media=[files_to_media(file)])
-                        await bot.send_message(chat_id=rule[4], text=f'Получено {len(files)} файл-а(-ов) от "{rule[0]}"'
-                                                                     f' для "{rule[2]}"')
-                elif rule[1] == 'text':
-                    mail = MailText(email=rule[2], password=rule[3], from_email=rule[0])
-                    text = await mail.get_response()
-                    if text:
-                        await bot.send_message(chat_id=rule[4], text=f'Входящее письмо от "{rule[0]}" для "{rule[2]}"\n'
-                                                                     f'{text}')
-            await asyncio.sleep(5)
+            try:
+                rules = await rq.get_all_rules()
+                for rule in rules:
+                    if rule[1] == 'all':
+                        mail = MailHtml(email=rule[2], password=rule[3], from_email=rule[0])
+                        html = await mail.get_response()
+                        if html:
+                            html_id = f"{rule[4]}-{html.get('mail_id')}"
+                            await write_html(html_id, html['html'])
+                            await bot.send_message(chat_id=rule[4], text=f'Входящее письмо \nот "{rule[0]}" '
+                                                                         f'\nдля "{rule[2]}"',
+                                                   reply_markup=await web_app_kb(html_id))
+                    elif rule[1] == 'file':
+                        mail = MailFile(email=rule[2], password=rule[3], from_email=rule[0])
+                        files = await mail.get_response()
+                        if files:
+                            for file in files:
+                                await bot.send_media_group(chat_id=rule[4], media=[files_to_media(file)])
+                            await bot.send_message(chat_id=rule[4], text=f'Получено {len(files)} файл-а(-ов) \nот "{rule[0]}"'
+                                                                         f' \nдля "{rule[2]}"')
+                    elif rule[1] == 'text':
+                        mail = MailText(email=rule[2], password=rule[3], from_email=rule[0])
+                        text = await mail.get_response()
+                        if text:
+                            await bot.send_message(chat_id=rule[4], text=f'Входящее письмо \nот "{rule[0]}" \nдля '
+                                                                         f'"{rule[2]}"\n{text}')
+            except Exception as e:
+                logger2.exception(f"Ошибка модуля проверки почты.", exc_info=e)
+            finally:
+                await asyncio.sleep(5)
 
 
 def mail_worker():

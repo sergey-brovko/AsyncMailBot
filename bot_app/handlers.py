@@ -24,8 +24,8 @@ class RegRule(StatesGroup):
 @router.message(Command("start"))
 async def cmd_start(message: Message):
     await rq.set_user(message.chat.id)
-    await message.answer(f"Приветствую, {message.from_user.first_name}, выберите одно из "
-                         f"доступных действий", reply_markup=kb.main)
+    await message.answer(f"Приветствую, {message.from_user.first_name}, выберите одно из доступных действий для"
+                         f"начала работы с ботом", reply_markup=kb.main)
 
 
 @router.message(Command("start_bot"))
@@ -69,13 +69,20 @@ async def finish_registration(message: Message, state: FSMContext):
     data = await state.get_data()
     await message.delete()
     try:
-        await rq.set_mailbox(chat_id=message.chat.id, email=data['email'], password=data['password'])
-        await message.answer("Почтовый ящик зарегистрирован")
+        if await mb.Mail(email=data['email'], password=data['password']).is_connect():
+            await rq.set_mailbox(chat_id=message.chat.id, email=data['email'], password=data['password'])
+            await message.answer("Почтовый ящик успешно зарегистрирован", reply_markup=kb.main_menu)
+        else:
+            await message.answer("Не удалось подключиться к почтовому ящику. Если вы ввели правильные логин или "
+                                 "пароль, проверьте разрешение в настройках почтового ящика для работы с IMAP сервером "
+                                 "и попробуйте снова.\nНастройки разрешений для почтовых ящиков\n"
+                                 "Yandex - https://yandex.ru/support/mail/mail-clients/others.html\n"
+                                 "Mail - https://help.mail.ru/mail/mailer/popsmtp", disable_web_page_preview=True,
+                                 reply_markup=kb.main)
     except Exception as e:
         await message.answer(f"Ошибка при регистрации:\n{e}")
     finally:
         await state.clear()
-        await message.answer(f"Выберите одно из доступных действий", reply_markup=kb.main)
 
 
 @router.callback_query(F.data == 'checking_mailboxes')
@@ -106,7 +113,7 @@ async def check_mailbox(callback: CallbackQuery):
     mailbox_id = int(callback.data.split('_')[2])
     mailbox = await rq.get_mailboxes_by_id(mailbox_id)
     try:
-        text = ("Подключено"
+        text = ("✅ Соединение с сервером почтового ящика прошло успешно"
                 if await mb.Mail(email=mailbox.email, password=mailbox.password).is_connect()
                 else "Не удалось подключиться. Проверьте настройки почтового ящика (правильный логин и пароль, "
                      "разрешение в настройках почтового ящика для работы с IMAP).\n"
@@ -144,11 +151,13 @@ async def enter_email(message: Message, state: FSMContext):
 @router.callback_query(F.data.startswith('track_'))
 async def get_action(callback: CallbackQuery, state: FSMContext):
     action = callback.data.split('_')[1]
-    await callback.answer('Введите адрес электронной почты с которой необходимо отслеживать письма')
+    await callback.answer('Правило зарегистрировано.')
+    await callback.message.answer('Правило зарегистрировано. Для начала отслеживания входящих писем '
+                                  'выполните команду /start_bot, для остановки /stop_bot',
+                                  reply_markup=kb.main_menu)
     await state.update_data(action=action)
     data = await state.get_data()
     await rq.set_rule(mailbox_id=data['mailbox_id'], email=data['email'], action=data['action'])
-    await mailbox_actions(callback, int(data['mailbox_id']))
     await state.clear()
 
 

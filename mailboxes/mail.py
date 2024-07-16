@@ -55,43 +55,40 @@ class MailFile(MailFilter):
     async def get_response(self):
         try:
             with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
-                logger3.info(f"Open IMAP connection for File {self.email}, {self.from_email}")
                 messages = mailbox.fetch(A(new=True))
                 for msg in messages:
-                    if msg.from_ == self.from_email:
-                        logger3.info("Send File")
+                    if msg.from_.lower() == self.from_email.lower():
+                        logger3.info(f"Получено сообщение типа File для {self.email} от {self.from_email}")
                         return [(att.filename, att.payload) for att in msg.attachments]
         except Exception as e:
-            logger3.exception("Неверный формат электронной почты.", exc_info=e)
+            logger3.exception(f"Не удалось подключиться к {self.server}.", exc_info=e)
 
 
 class MailText(MailFilter):
     async def get_response(self):
         try:
             with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
-                logger3.info(f"Open IMAP connection for Text {self.email}, {self.from_email}")
                 messages = mailbox.fetch(A(new=True))
                 for msg in messages:
-                    if msg.from_ == self.from_email:
-                        logger3.info("Send Text")
+                    if msg.from_.lower() == self.from_email.lower():
+                        logger3.info(f"Получено сообщение типа Text для {self.email} от {self.from_email}")
                         soup = BeautifulSoup(msg.html, 'html.parser')
                         text = list(soup.get_text(separator='\n') + self.from_email)
                         text = [ch for i, ch in enumerate(text) if (ch != '\n') or (text[i-1] != '\n')]
                         text = [ch for i, ch in enumerate(text) if (ch != ' ') or (text[i - 1] != ' ')]
                         return ''.join(text)
         except Exception as e:
-            logger3.exception("Неверный формат электронной почты.", exc_info=e)
+            logger3.exception(f"Не удалось подключиться к {self.server}.", exc_info=e)
 
 
 class MailHtml(MailFilter):
     async def get_response(self):
         try:
             with MailBox(self.server).login(username=self.email, password=self.password) as mailbox:
-                logger3.info(f"Open IMAP connection for HTML {self.email}, {self.from_email}")
                 messages = mailbox.fetch(A(new=True))
                 for msg in messages:
-                    if msg.from_ == self.from_email:
-                        logger3.info("Send HTML")
+                    if msg.from_.lower() == self.from_email.lower():
+                        logger3.info(f"Получено сообщение типа HTML для {self.email} от {self.from_email}")
                         return {'html': msg.html, 'mail_id': msg.date_str}
         except Exception as e:
-            logger3.exception("Неверный формат электронной почты.", exc_info=e)
+            logger3.exception(f"Не удалось подключиться к {self.server}.", exc_info=e)
