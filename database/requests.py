@@ -70,11 +70,15 @@ async def get_mailbox_id_by_rule(rule_id: int) -> int:
         return await session.scalar(select(Rule.mailbox_id).where(Rule.rule_id == rule_id))
 
 
-async def get_all_rules() -> list[tuple] | None:
+async def get_all_rules() -> list[tuple[dict, list[tuple[any, any]]]] | None:
     async with async_session() as session:
-        rules = await session.execute(select(Rule.email, Rule.action, Mailbox.email, Mailbox.password, User.chat_id)
-                                      .join(Mailbox, Rule.mailbox_id == Mailbox.mailbox_id).
-                                      join(User, Mailbox.user_id == User.user_id)
-                                      .where(User.receive_letters == True).order_by(Rule.email))
+        result = []
+        mailboxes = await session.execute(select(Mailbox.email, Mailbox.password, Mailbox.mailbox_id, User.chat_id)
+                                          .join(User, Mailbox.user_id == User.user_id)
+                                          .where(User.receive_letters == True))
+        for mailbox in mailboxes:
+            rules = await session.execute(select(Rule.email, Rule.action)
+                                          .where(Rule.mailbox_id == mailbox[2]))
+            result.append(({'email': mailbox[0], 'password': decrypt(mailbox[1]), 'chat_id': mailbox[3]}, rules))
 
-        return [(rule[0], rule[1], rule[2], decrypt(rule[3]), rule[4]) for rule in rules]
+        return result

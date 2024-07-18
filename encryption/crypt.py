@@ -8,9 +8,9 @@ load_dotenv()
 FERNET = Fernet(os.getenv('SECRET_KEY'))
 
 
-def encrypt(password):
+def encrypt(password) -> str:
     return FERNET.encrypt(password.encode()).decode()
 
 
-def decrypt(encrypted_password):
+def decrypt(encrypted_password) -> str:
     return FERNET.decrypt(encrypted_password).decode()
