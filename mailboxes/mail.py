@@ -1,7 +1,7 @@
 import logging
 import time
 from bs4 import BeautifulSoup
-from imap_tools import MailBox, MailMessage, A, AND
+from imap_tools import MailBox, MailMessage, A, AND, OR
 
 logger3 = logging.getLogger(__name__)
 logger3.setLevel(logging.DEBUG)
@@ -48,28 +48,27 @@ class Mail(ServerName):
 
 class ActionByRules:
 
-    def __init__(self, messages: list, from_email: str, action: str):
+    def __init__(self, messages: list, action: str):
         self.messages = messages
-        self.from_email = from_email.lower()
         self.action = action
 
     def get_file(self) -> list[tuple] | None:
         for msg in self.messages:
-            if msg.from_ == self.from_email:
+            if msg:
                 return [(att.filename, att.payload) for att in msg.attachments]
 
     def get_text(self) -> str | None:
         for msg in self.messages:
-            if msg.from_ == self.from_email:
+            if msg:
                 soup = BeautifulSoup(msg.html, 'html.parser')
-                text = list(soup.get_text(separator='\n') + self.from_email)
+                text = list(soup.get_text(separator='\n') + '\n' + msg.from_)
                 text = [ch for i, ch in enumerate(text) if (ch != '\n') or (text[i - 1] != '\n')]
                 text = [ch for i, ch in enumerate(text) if (ch != ' ') or (text[i - 1] != ' ')]
                 return ''.join(text)
 
     def get_html(self) -> dict | None:
         for msg in self.messages:
-            if msg.from_ == self.from_email:
+            if msg:
                 return {'html': msg.html, 'mail_id': msg.date_str}
 
     def get_msg_by_action(self) -> dict[str, list[tuple] | str | dict | None]:
@@ -96,12 +95,20 @@ class MailFilter(Mail):
         else:
             try:
                 mailbox.login(username=self.email, password=self.password)
-                messages = list(mailbox.fetch(A(new=True)))
+                uids_new = mailbox.uids(A(new=True))
+                # messages = list(mailbox.fetch(AND(A(new=True), OR(from_=emails))))
+                # logger3.info(f"\nemails:{emails}\ncriteria=:{AND(A(new=True), OR(from_=emails))}\n"
+                #              f"uids_from:{uids_from}\nuids_new:{uids_new}\nmessages:{messages}\n")
                 result = []
-                for rule in self.rules:
-                    msg = ActionByRules(messages=messages, from_email=rule[0], action=rule[1]).get_msg_by_action()
-                    if msg.get('data'):
-                        result.append(msg)
+                if uids_new:
+                    for rule in self.rules:
+                        uids = [uid for uid in uids_new if uid in mailbox.uids(A(from_=rule[0].lower()))]
+                        if uids:
+                            messages = list(mailbox.fetch(OR(uid=uids)))
+                            logger3.info(f"\nuids:{uids}\nuids_new:{uids_new}\nmessages:{messages}\n")
+                            msg = ActionByRules(messages=messages, action=rule[1]).get_msg_by_action()
+                            if msg.get('data'):
+                                result.append(msg)
                 mailbox.logout()
                 return result
             except Exception as e:
