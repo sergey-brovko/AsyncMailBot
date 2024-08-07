@@ -3,7 +3,7 @@ from aiogram.types import InputMediaDocument, InputMediaPhoto, InputMediaAudio, 
 
 def detect_file_type(filename: str) -> str:
     if filename.split('.')[1] in ('aif', 'aiff', 'wav', 'mid', 'ogg', 'flac', 'mp3',
-                                  'mp4', 'aac', 'm4a', 'aifc', 'rm', 'ra', 'wma'):
+                                  'aac', 'm4a', 'aifc', 'rm', 'ra', 'wma'):
         return 'Audio'
     if filename.split('.')[1] in ('sxi', 'odg', 'svg', 'vsd', 'eps', 'cwk', 'wp', 'ott', 'asp', 'cdd',
                                   'cpp', 'dotm', 'gpx', 'indd', 'kdc', '.kml', 'mdb', 'mdf', 'mso', 'one',

@@ -1,11 +1,9 @@
 from sqlalchemy import BigInteger, String, ForeignKey, Boolean, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
-from dotenv import load_dotenv
 import os
 
-load_dotenv()
-engine = create_async_engine(url=os.getenv('POSTGRES'))
+engine = create_async_engine(url=os.getenv('POSTGRES_URL'))
 
 async_session = async_sessionmaker(engine)
 

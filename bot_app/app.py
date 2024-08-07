@@ -1,18 +1,17 @@
 import os
 from dotenv import load_dotenv
-from database.models import async_main
+from bot_app.database.models import async_main
 from bot_app.handlers import router
 import asyncio
 from aiogram import Bot, Dispatcher
 import logging
 
-logger1 = logging.getLogger(__name__)
-logger1.setLevel(logging.DEBUG)
-handler1 = logging.FileHandler(f"{__name__}.log", mode='w')
-formatter1 = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
-handler1.setFormatter(formatter1)
-logger1.addHandler(handler1)
-logger1.info(f"Testing the custom logger for module {__name__}...")
+# Enable logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -25,9 +24,9 @@ async def main():
     await dp.start_polling(bot)
 
 
-def bot_run():
+if __name__ == '__main__':
     try:
         asyncio.run(main())
-        logger1.info('Бот включен')
+        logger.info('Бот включен')
     except KeyboardInterrupt:
-        logger1.exception('Бот выключен')
+        logger.exception('Бот выключен')

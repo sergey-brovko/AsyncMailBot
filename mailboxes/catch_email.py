@@ -1,26 +1,27 @@
 from aiogram import Bot
 from database import requests as rq
 from database.mongodb import write_html
-from mailboxes.media import files_to_media
-from mailboxes.mail import MailFilter
-from bot_app.keyboards import web_app_kb
+from media import files_to_media
+from mail import MailFilter
+from keyboards import web_app_kb
+from database.models import async_main
 import asyncio
 from dotenv import load_dotenv
 import os
 import logging
 
-logger2 = logging.getLogger(__name__)
-logger2.setLevel(logging.DEBUG)
-handler2 = logging.FileHandler(f"{__name__}.log", mode='w')
-formatter2 = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
-handler2.setFormatter(formatter2)
-logger2.addHandler(handler2)
-logger2.info(f"Testing the custom logger for module {__name__}...")
+# Enable logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
 
 async def send_emails() -> None:
+    await async_main()
     async with Bot(token=os.getenv('TOKEN')) as bot:
         while True:
             try:
@@ -28,6 +29,7 @@ async def send_emails() -> None:
                 for mailbox, rules in mailboxes_rules:
                     mail = MailFilter(mailbox['email'], mailbox['password'], rules=rules)
                     messages = mail.get_response()
+                    # logger2.info(f"Сообщения: {messages} для: {mailbox['email']} и правила {rules}.")
                     if messages:
                         for msg in messages:
                             if msg['type'] == 'all':
@@ -49,15 +51,15 @@ async def send_emails() -> None:
                                                                                         f'"{mailbox['email']}"\n{text}')
 
             except Exception as e:
-                logger2.exception(f"Ошибка модуля проверки почты.", exc_info=e)
+                logger.exception(f"Ошибка модуля проверки почты.", exc_info=e)
             finally:
                 await asyncio.sleep(5)
 
 
-def mail_worker():
+if __name__ == '__main__':
     try:
         asyncio.run(send_emails())
-        logger2.info('Включено отслеживание входящей почты остановлено')
+        logger.info('Включено отслеживание входящей почты остановлено')
     except KeyboardInterrupt:
-        logger2.exception('Отслеживание входящей почты остановлено')
+        logger.exception('Отслеживание входящей почты остановлено')
 

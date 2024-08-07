@@ -3,9 +3,9 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters.command import Command
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-from database import requests as rq
+from bot_app.database import requests as rq
 from bot_app import keyboards as kb
-import mailboxes.mail as mb
+import bot_app.mail as mb
 
 router = Router()
 

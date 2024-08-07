@@ -1,7 +1,7 @@
-from database.models import async_session
+from bot_app.database.models import async_session
 from sqlalchemy import select, delete, update
-from database.models import User, Mailbox, Rule
-from encryption.crypt import encrypt, decrypt
+from bot_app.database.models import User, Mailbox, Rule
+from bot_app.encryption.crypt import encrypt, decrypt
 
 
 async def set_user(chat_id: int) -> None:

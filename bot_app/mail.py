@@ -4,12 +4,13 @@ from bs4 import BeautifulSoup
 from imap_tools import MailBox, A, OR
 import imaplib
 
-# Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logger = logging.getLogger(__name__)
+logger3 = logging.getLogger(__name__)
+logger3.setLevel(logging.DEBUG)
+handler3 = logging.FileHandler(f"{__name__}.log", mode='w')
+formatter3 = logging.Formatter("%(name)s %(asctime)s %(levelname)s %(message)s")
+handler3.setFormatter(formatter3)
+logger3.addHandler(handler3)
+logger3.info(f"Testing the custom logger for module {__name__}...")
 
 
 class ServerName:
@@ -22,13 +23,13 @@ class ServerName:
             elif email.split('@')[1] in ('outlook.com', '1cbit.ru'):
                 self.server = 'outlook.office365.com'
             else:
-                logger.exception("Домен не из списка")
+                logger3.exception("Домен не из списка")
                 raise ValueError("В настоящее время доступно только использование почтовых серверов Mail, Yandex "
                                  "и Outlook. Почтовый сервер Gmail не поддерживает IMAP, его использование"
                                  "невозможно. Для рассмотрения возможности использования вашего почтового "
                                  "сервера обратитесь к администратору бота @true_kapitan")
         else:
-            logger.exception("Неверный формат электронной почты.")
+            logger3.exception("Неверный формат электронной почты.")
             raise ValueError("Неверный формат электронной почты. Подключение невозможно")
 
 
@@ -90,7 +91,7 @@ class MailFilter(Mail):
             mailbox = MailBox(self.server)
             imap = imaplib.IMAP4_SSL(self.server)
         except Exception as e:
-            logger.exception(f'## Ошибка в подключении к {self.server}, переподключение через минуту...',
+            logger3.exception(f'## Ошибка в подключении к {self.server}, переподключение через минуту...',
                               exc_info=e)
             time.sleep(60)
         else:
@@ -101,11 +102,11 @@ class MailFilter(Mail):
                 result = []
                 for rule in self.rules:
                     status, new_uids = imap.uid('search', "NEW", f'FROM "{rule[0].lower()}"')
-                    # logger.info(f"\nuids_new:{new_uids}\n для {rule[0].lower()}\n")
+                    logger3.info(f"\nuids_new:{new_uids}\n для {rule[0].lower()}\n")
                     if new_uids[0]:
                         new_uids = new_uids[0].decode().split()
                         messages = list(mailbox.fetch(OR(uid=new_uids)))
-                        logger.info(f"\nmessages:{messages}\n")
+                        logger3.info(f"\nmessages:{messages}\n")
                         msg = ActionByRules(messages=messages, action=rule[1]).get_msg_by_action()
                         if msg.get('data'):
                             result.append(msg)
@@ -114,5 +115,5 @@ class MailFilter(Mail):
                 mailbox.logout()
                 return result
             except Exception as e:
-                logger.exception(f'## Ошибка в получении письма для {self.email}',
+                logger3.exception(f'## Ошибка в получении письма для {self.email}',
                                   exc_info=e)

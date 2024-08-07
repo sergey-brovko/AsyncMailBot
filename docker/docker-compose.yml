@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:4.4
+    container_name: mgdb_container
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo_data:/data/mongo_db
+
+  postgres_db:  # Имя сервиса
+      image: postgres:latest  # Используем образ PostgreSQL
+      container_name: postgres_container
+      restart: always  # Перезапускать контейнер в случае сбоя
+      environment:
+        POSTGRES_USER: root  # Имя пользователя
+        POSTGRES_PASSWORD: MyPassword  # Пароль пользователя
+        POSTGRES_DB: mailbotdb  # Имя базы данных
+      volumes:
+        - postgres_data:/data/postgres_db  # Сохраним данные в volume для персистентности
+
+  bot_app:
+    build:
+      context: ../  # Context is the project root to access all files
+      dockerfile: docker/Bot_dockerfile  # Path to Mailbox_dockerfile in docker directory
+    container_name: bot_app
+    environment:
+      MONGODB_URL: mongodb://root:example@mongodb:27017
+      POSTGRES_URL: postgresql+asyncpg://root:MyPassword@postgres_db/mailbotdb
+    depends_on:
+      - mongodb
+      - postgres_db
+    ipc: host
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      stack:
+        soft: 67108864
+        hard: 67108864
+#
+#    ports:
+#      - "8000:8000"  # Adjust based on your app's needs
+
+  mailbox_app:
+    build:
+      context: ../  # Context is the project root to access all files
+      dockerfile: docker/Mailbox_dockerfile  # Path to Mailbox_dockerfile in docker directory
+    container_name: mailboxes_app
+    environment:
+      MONGODB_URL: mongodb://root:example@mongodb:27017
+      POSTGRES_URL: postgresql+asyncpg://root:MyPassword@postgres_db/mailbotdb
+    depends_on:
+      - mongodb
+      - postgres_db
+    ipc: host
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      stack:
+        soft: 67108864
+        hard: 67108864
+#
+#    ports:
+#      - "8000:8000"  # Adjust based on your app's needs
+
+volumes:
+  mongo_data:
+    driver: local
+  postgres_data:
+    driver: local
