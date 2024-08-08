@@ -29,27 +29,29 @@ async def send_emails() -> None:
                 for mailbox, rules in mailboxes_rules:
                     mail = MailFilter(mailbox['email'], mailbox['password'], rules=rules)
                     messages = mail.get_response()
-                    # logger2.info(f"Сообщения: {messages} для: {mailbox['email']} и правила {rules}.")
+                    del mail
                     if messages:
                         for msg in messages:
                             if msg['type'] == 'all':
                                 html = msg['data']
                                 html_id = f"{mailbox['chat_id']}-{html.get('mail_id')}"
                                 await write_html(html_id, html['html'])
-                                await bot.send_message(chat_id=mailbox['chat_id'], text=f'Входящее письмо '
-                                                                                        f'\nдля "{mailbox['email']}"',
+                                await bot.send_message(chat_id=mailbox['chat_id'],
+                                                       text=f'Входящее письмо \nдля "{mailbox['email']}"'
+                                                            f'\nот "{html['from']}"',
                                                        reply_markup=await web_app_kb(html_id))
                             elif msg['type'] == 'file':
-                                files = msg['data']
+                                files = msg['data']['files']
                                 for file in files:
                                     await bot.send_media_group(chat_id=mailbox['chat_id'], media=[files_to_media(file)])
-                                await bot.send_message(chat_id=mailbox['chat_id'], text=f'Получено {len(files)} файл-а(-ов)'
-                                                                                        f'\nдля "{mailbox['email']}"')
+                                await bot.send_message(chat_id=mailbox['chat_id'],
+                                                       text=f'Получено {len(files)} файл-а(-ов)\nдля "{mailbox['email']}'
+                                                            f'"\nот "{msg['data']['from']}"')
                             elif msg['type'] == 'text':
-                                text = msg['data']
-                                await bot.send_message(chat_id=mailbox['chat_id'], text=f'Входящее письмо \nдля '
-                                                                                        f'"{mailbox['email']}"\n{text}')
-
+                                text = msg['data']['text']
+                                await bot.send_message(chat_id=mailbox['chat_id'],
+                                                       text=f'Входящее письмо \nдля "{mailbox['email']}"\n{text}\nот '
+                                                            f'"{msg['data']['from']}"')
             except Exception as e:
                 logger.exception(f"Ошибка модуля проверки почты.", exc_info=e)
             finally:

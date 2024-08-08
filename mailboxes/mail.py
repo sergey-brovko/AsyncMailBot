@@ -1,7 +1,7 @@
 import logging
 import time
 from bs4 import BeautifulSoup
-from imap_tools import MailBox, A, OR
+from imap_tools import MailBox, A, OR, AND
 import imaplib
 
 # Enable logging
@@ -52,26 +52,26 @@ class ActionByRules:
         self.messages = messages
         self.action = action
 
-    def get_file(self) -> list[tuple] | None:
+    def get_file(self) -> dict[str, list[tuple]] | None:
         for msg in self.messages:
             if msg:
-                return [(att.filename, att.payload) for att in msg.attachments]
+                return {'files': [(att.filename, att.payload) for att in msg.attachments], 'from': msg.from_}
 
-    def get_text(self) -> str | None:
+    def get_text(self) -> dict[str, str] | None:
         for msg in self.messages:
             if msg:
                 soup = BeautifulSoup(msg.html, 'html.parser')
-                text = list(soup.get_text(separator='\n') + '\n' + msg.from_)
+                text = list(soup.get_text(separator='\n'))
                 text = [ch for i, ch in enumerate(text) if (ch != '\n') or (text[i - 1] != '\n')]
                 text = [ch for i, ch in enumerate(text) if (ch != ' ') or (text[i - 1] != ' ')]
-                return ''.join(text)
+                return {'text': ''.join(text), 'from': msg.from_}
 
     def get_html(self) -> dict | None:
         for msg in self.messages:
             if msg:
-                return {'html': msg.html, 'mail_id': msg.date_str}
+                return {'html': msg.html, 'mail_id': msg.date_str, 'from': msg.from_}
 
-    def get_msg_by_action(self) -> dict[str, list[tuple] | str | dict | None]:
+    def get_msg_by_action(self) -> dict[str, dict[str, list[tuple]] | dict[str, str] | dict | None]:
         if self.action == 'all':
             return {'type': 'all', 'data': self.get_html()}
         elif self.action == 'file':
@@ -88,31 +88,21 @@ class MailFilter(Mail):
     def get_response(self) -> list[dict[str, list[tuple] | str | dict | None]] | None:
         try:
             mailbox = MailBox(self.server)
-            imap = imaplib.IMAP4_SSL(self.server)
         except Exception as e:
-            logger.exception(f'## Ошибка в подключении к {self.server}, переподключение через минуту...',
-                              exc_info=e)
+            logger.exception(f'## Ошибка в подключении к {self.server}, переподключение через минуту...', exc_info=e)
             time.sleep(60)
         else:
             try:
                 mailbox.login(username=self.email, password=self.password)
-                imap.login(self.email, self.password)
-                imap.select()
                 result = []
                 for rule in self.rules:
-                    status, new_uids = imap.uid('search', "NEW", f'FROM "{rule[0].lower()}"')
-                    # logger.info(f"\nuids_new:{new_uids}\n для {rule[0].lower()}\n")
-                    if new_uids[0]:
-                        new_uids = new_uids[0].decode().split()
-                        messages = list(mailbox.fetch(OR(uid=new_uids)))
-                        logger.info(f"\nmessages:{messages}\n")
+                    messages = list(mailbox.fetch(AND(A(new=True), A(from_=rule[0].lower()))))
+                    if messages:
                         msg = ActionByRules(messages=messages, action=rule[1]).get_msg_by_action()
+                        logger.info(f"\nmessages:{messages}\n")
                         if msg.get('data'):
                             result.append(msg)
-                imap.close()
-                imap.logout()
                 mailbox.logout()
                 return result
             except Exception as e:
-                logger.exception(f'## Ошибка в получении письма для {self.email}',
-                                  exc_info=e)
+                logger.exception(f'## Ошибка в получении письма для {self.email}', exc_info=e)
